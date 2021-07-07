@@ -46,17 +46,11 @@ public class GestorControle {
         acoes.delete(gm);
     }
 
-    // LISTAR TUDO
+    // LISTAR TUDO E SELECIONAR
     @GetMapping(value = "/api")
     public @ResponseBody List<GestorModelo> listar(){
         return acoes.findAll();
     }
-    
-    // SELECIONAR
-    // @GetMapping(value = "/api")
-    // public List<GestorModelo> selecionar(){
-    //     return acoes.findAll();
-    // }
 
     // PROCURAR POR CODIGO
     @GetMapping (value = "/api/{codigo}")
