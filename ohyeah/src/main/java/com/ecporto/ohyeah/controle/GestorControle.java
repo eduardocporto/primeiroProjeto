@@ -60,10 +60,5 @@ public class GestorControle {
         return acoes.findByCodigo(codigo);
     }
 
-
-
-
-
-
-    
+  
 }

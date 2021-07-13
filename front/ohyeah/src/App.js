@@ -9,6 +9,7 @@ export default class App extends React.Component{
         this.state = {
             cadastro:true,
             codigo:'',
+            salario:'',
             despesa:'',
             valor:'',
             vencimento:'',
@@ -65,6 +66,26 @@ export default class App extends React.Component{
         var novaData = dia + "/" + mes + "/" + ano;
 
         return novaData;
+    }
+
+    // funcao selecionar
+    selecionar = (e) => {
+
+        // capturar indice
+        var indice = e.target.value;
+
+        // extrair dados da linha do vetor
+        var obj = this.state.vetor[indice];
+
+        // alterar o state
+        this.setState({
+            codigo:obj.codigo,
+            despesa:obj.despesa,
+            valor:obj.valor,
+            vencimento:obj.vencimento,
+            cadastro:false
+        })
+
     }
 
     //funcao cadastrar
@@ -131,6 +152,129 @@ export default class App extends React.Component{
         
     }
 
+    // funcao editar 
+    editar = () => {
+
+        if (this.state.despesa === ''){
+            this.setState({
+                statusAlerta:'Falha',
+                textoAlerta:'O campo despesa precisa ser preenchido'
+            })
+
+        }else if(this.state.valor === ''){
+            this.setState({
+                statusAlerta:'Falha',
+                textoAlerta:'O campo valor precisa ser preenchido'
+            })
+        }else if(this.state.vencimento === ''){
+            this.setState({
+                statusAlerta:'Falha',
+                textoAlerta:'O campo vencimento precisa ser preenchido'
+            })
+
+        }else {
+            
+            var obj = {
+                "codigo":this.state.codigo,
+                "salario":this.state.salario,
+                "despesa": this.state.despesa,
+                "valor":this.state.valor,
+                "vencimento":this.formatarData(),
+                "situacao":this.state.situacao
+
+            }
+
+        // comunicar com a API
+        fetch('http://localhost:8080/api', {
+            method:'PUT',
+            headers:{
+                'Accept':'application/json',
+                'Content-Type':'application/json'
+            },
+            body: JSON.stringify(obj)
+        })
+        .then(retorno => retorno.json())
+        .then(retorno=> {
+
+            // fazer copia do state do vetor
+            var copiaVetor = [...this.state.vetor];
+
+            // verificar a posição do vetor que será editado
+            var indiceEditar = copiaVetor.findIndex((objeto) => {
+                return objeto.codigo === this.state.codigo;
+            });
+
+            // alterar o elemento
+            copiaVetor[indiceEditar] = obj;
+
+            // sobrepor o state do vetor
+            this.setState({vetor : copiaVetor});
+
+            // limpar campos
+            this.limparCampos();
+
+            // alterar
+            this.setState({
+                statusAlerta:'Ok',
+                textoAlerta:'Edição realizada com sucesso!'
+            })
+        })
+
+
+        }
+    }
+
+    // funcao cancelar
+    cancelar = () => {
+
+        // limpar campos
+        this.limparCampos();
+
+        // habilitar os botoes novamente
+        this.setState({cadastro : true});
+
+    }
+
+    // funcao remover
+    remover = (e) => {
+
+        fetch('http://localhost:8080/api/'+this.state.codigo, {
+            method:'DELETE',
+            headers:{
+                'Accept' : 'applicaction/json',
+                'Content-Type':'application/json'           
+            },
+            
+        })
+        .then(() => {
+
+            // fazer copia do state vetor
+            var copiaVetor = [...this.state.vetor];
+
+            // verificar no vetor a posição da linha que será removida
+            var indiceRemover = copiaVetor.findIndex((objeto) => {
+                return objeto.codigo === this.state.codigo;
+            });
+
+            // remover elemento
+            copiaVetor.splice(indiceRemover, 1);
+
+            // sobrepor o state
+            this.setState({vetor : copiaVetor});
+
+            // limpar campos
+            this.limparCampos();
+
+            // alterar status da mensagem
+            this.setState({
+                statusAlerta : 'Ok',
+                textoAlerta : 'Despesa removida com sucesso'
+            })
+
+        })
+
+    }
+
         
     mudarSituacao = (e) => {
 
@@ -172,8 +316,9 @@ export default class App extends React.Component{
     // Render
     render(){
         return(
-            <div>
+            <div className="row">
                 {/* FORMULARIO */}
+                <div className='col-5 offset-1'>
                 <form>
                     <div
                         className={
@@ -195,13 +340,29 @@ export default class App extends React.Component{
                     :
 
                     <div>
-                        <input type='button' value='Editar' className='btn btn-warning'  />
-                        <input type='button' value='Remover' className='btn btn-danger' />
-                        <input type='button' value='Cancelar' className='btn btn-secondary' />
+                        <input type='button' value='Editar' className='btn btn-warning' onClick={this.editar} />
+                        <input type='button' value='Remover' className='btn btn-danger' onClick={this.remover} />
+                        <input type='button' value='Cancelar' className='btn btn-secondary' onClick={this.cancelar} />
                     </div>
                     }
                     
                 </form>
+
+                </div>
+
+                <div className='col-5'>
+                    <div className='contas'>
+                        <input type='text' value={this.state.salario} placeholder='Receitas' name='receita' onChange={this.aoDigitar} className='form-control receita' />
+                        <input type='button' value='Registrar' className='btn btn-primary registrar' />
+                        <p></p>
+                        <p>Total Despesas: R$700,00</p>
+                        <p>Total Pendente: R$700,00</p>
+                        <p>Total pago: R$700,00</p>
+                        <p>Saldo: R$700,00</p>
+                    </div>
+                </div>
+
+
     
                 {/* TABELA aqui abaixo foi adicionada a "lista" para distinguir o button no CSS*/}                
                 <table className='table table-striped lista'>
@@ -221,10 +382,10 @@ export default class App extends React.Component{
                             <tr>
                                 <td>{indice + 1}</td>
                                 <td>{despesa.despesa}</td>
-                                <td>{despesa.valor}</td>
+                                <td>{'R$ '+despesa.valor}</td>
                                 <td>{despesa.vencimento}</td>
                                 <td>{despesa.situacao === false ? <button className='btn btn-danger' onClick={this.mudarSituacao} value={indice} disabled={this.state.desabilitarBotao}><i className="fas fa-times"></i></button> : <button className='btn btn-success' onClick={this.mudarSituacao} value={indice} disabled={this.state.desabilitarBotao}><i className="fas fa-check"></i></button>}</td>
-                                <td><button className='btn btn-sucess' value={indice}>Selecionar</button></td>
+                                <td><button className='btn btn-success selecionar'  value={indice} onClick={this.selecionar}>Selecionar</button></td>
                             </tr>
                         )}
                     )}

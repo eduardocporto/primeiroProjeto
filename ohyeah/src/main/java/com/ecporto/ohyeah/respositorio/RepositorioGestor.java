@@ -21,13 +21,5 @@ public interface RepositorioGestor extends CrudRepository<GestorModelo, Integer>
 
     // listar por codigo
     GestorModelo findByCodigo(int codigo);
-
-
-
-
-
-
-
-
     
 }

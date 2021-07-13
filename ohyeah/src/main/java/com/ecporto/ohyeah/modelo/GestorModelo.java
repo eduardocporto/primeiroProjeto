@@ -13,6 +13,7 @@ public class GestorModelo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int codigo;
+    private double salario;
     private String despesa;
     private double valor;
     private String vencimento;
@@ -20,6 +21,10 @@ public class GestorModelo {
 
     public int getCodigo() {
         return this.codigo;
+    }
+
+    public double getSalario() {
+        return this.salario;
     }
 
     public void setCodigo(int codigo) {
